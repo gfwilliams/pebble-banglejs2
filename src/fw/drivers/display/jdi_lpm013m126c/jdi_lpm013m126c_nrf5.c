@@ -46,7 +46,7 @@ static volatile int s_spidma_immediate = 0;
 
 // DMA state
 static DisplayContext s_display_context;
-static uint32_t s_dma_line_buffer[DISP_DMA_BUFFER_SIZE_WORDS];
+static uint8_t s_dma_line_buffer[DISP_DMA_BUFFER_SIZE_BYTES];
 
 static SemaphoreHandle_t s_dma_update_in_progress_semaphore;
 
@@ -76,6 +76,8 @@ static void prv_spim_evt_handler(nrfx_spim_evt_t const *evt, void *ctx) {
     portEND_SWITCHING_ISR(needs_switch);
   }
 }
+
+static void prv_display_write_sync(const uint8_t *buf, size_t len);
 
 static void prv_display_start(void) {
   periph_config_acquire_lock();
@@ -122,6 +124,24 @@ static void prv_display_start(void) {
 
   // +5V to LCD_DISP pin (Set this pin low to turn off the display)
   gpio_output_set(&BOARD_CONFIG_DISPLAY.on_ctrl, true);
+
+
+  // debug
+  /*gpio_output_init(&BOARD_CONFIG_DISPLAY.clk, GPIO_OType_PP, GPIO_Speed_50MHz);
+  gpio_output_init(&BOARD_CONFIG_DISPLAY.mosi, GPIO_OType_PP, GPIO_Speed_50MHz);
+  gpio_output_set(&BOARD_CONFIG_DISPLAY.clk, true);
+  gpio_output_set(&BOARD_CONFIG_DISPLAY.mosi, true);
+  prv_enable_chip_select();
+  uint8_t buf[24] = { DISP_MODE_WRITE, 0x00 };
+  for (int i=0;i<176;i++) {
+    buf[1] = i+1;
+    buf[2+(i>>3)] |= 1 << (i&7);
+    prv_display_write_sync(buf, sizeof(buf));
+  }
+  buf[0]=0;
+  buf[1]=0;
+  prv_display_write_sync(buf, 2);
+  prv_disable_chip_select();*/
 
   periph_config_release_lock();
 }
@@ -176,6 +196,18 @@ static void prv_display_write_async(const uint8_t *buf, size_t len) {
 }
 
 static void prv_display_write_sync(const uint8_t *buf, size_t len) {
+#if 0 // debug bit-banging (requires SPI to be deinited)
+  for (size_t i=0;i<len;i++) {
+    for (int b=7;b>=0;b--) {
+      gpio_output_set(&BOARD_CONFIG_DISPLAY.mosi, (buf[i]>>b)&1);
+      for (volatile int i = 0; i < 32; i++);
+      gpio_output_set(&BOARD_CONFIG_DISPLAY.clk, true);
+      for (volatile int i = 0; i < 32; i++);
+      gpio_output_set(&BOARD_CONFIG_DISPLAY.clk, false);
+      for (volatile int i = 0; i < 32; i++);
+    }
+  }
+#else
   nrfx_spim_xfer_desc_t desc = {
     .p_tx_buffer = buf,
     .tx_length = len
@@ -192,6 +224,7 @@ static void prv_display_write_sync(const uint8_t *buf, size_t len) {
   while (s_spidma_waiting)
     /* XXX: ... yield, or something.  maybe a semaphore would be nicer here.  it should be fast, though */;
   s_spidma_immediate = 0;
+#endif
 }
 
 // Clear-all mode is entered by sending 0x04 to the panel
@@ -304,16 +337,15 @@ static bool prv_do_dma_update(void) {
 
     s_display_context.state = DISPLAY_STATE_WRITING;
 
+    s_dma_line_buffer[0] = DISP_MODE_WRITE;
 #if DISPLAY_ORIENTATION_ROTATED_180
-      prv_memcpy_reverse_bytes((uint8_t*)s_dma_line_buffer, r.data, DISP_LINE_BYTES);
-      s_dma_line_buffer[0] &= ~(0xffff);
-      s_dma_line_buffer[0] |= reverse_byte(DISP_MODE_WRITE) | (reverse_byte(r.address + 1) << 8);
+      prv_memcpy_reverse_bytes(&s_dma_line_buffer[2], r.data, DISP_LINE_BYTES);
+      s_dma_line_buffer[1] = reverse_byte(r.address + 1);
 #else
-      prv_memcpy_backwards(s_dma_line_buffer, (uint32_t*)r.data, DISP_LINE_WORDS);
-      s_dma_line_buffer[0] &= ~(0xffff);
-      s_dma_line_buffer[0] |= reverse_byte(DISP_MODE_WRITE) | (reverse_byte(175 - r.address + 1) << 8);
+      prv_memcpy_backwards((uint32_t*)&s_dma_line_buffer[2], (uint32_t*)r.data, DISP_LINE_WORDS);
+      s_dma_line_buffer[1] = reverse_byte(175 - r.address + 1);
 #endif
-    prv_display_write_async(((uint8_t*) s_dma_line_buffer), DISP_DMA_BUFFER_SIZE_BYTES);
+    prv_display_write_async(s_dma_line_buffer, DISP_LINE_BYTES+2);
 
     break;
   }
@@ -328,16 +360,20 @@ static bool prv_do_dma_update(void) {
       return was_higher_priority_task_woken != pdFALSE;
     }
 
+    s_dma_line_buffer[0] = DISP_MODE_WRITE;
 #if DISPLAY_ORIENTATION_ROTATED_180
-    prv_memcpy_reverse_bytes((uint8_t*)s_dma_line_buffer, r.data, DISP_LINE_BYTES);
-    s_dma_line_buffer[0] &= ~(0xffff);
-    s_dma_line_buffer[0] |= reverse_byte(r.address + 1) << 8;
+    prv_memcpy_reverse_bytes(&s_dma_line_buffer[2], r.data, DISP_LINE_BYTES);
+    s_dma_line_buffer[1] = reverse_byte(r.address + 1);
 #else
-    prv_memcpy_backwards(s_dma_line_buffer, (uint32_t*)r.data, DISP_LINE_WORDS);
-    s_dma_line_buffer[0] &= ~(0xffff);
-    s_dma_line_buffer[0] |= reverse_byte(175 - r.address + 1) << 8;
+    prv_memcpy_backwards((uint32_t*)&s_dma_line_buffer[2], (uint32_t*)r.data, DISP_LINE_WORDS);
+    s_dma_line_buffer[1] = reverse_byte(175 - r.address + 1);
 #endif
-    prv_display_write_async(((uint8_t*) s_dma_line_buffer) + 1, DISP_DMA_BUFFER_SIZE_BYTES - 1);
+    bool lastLine = r.address==(DISP_ROWS-1);
+    if (lastLine) {
+      s_dma_line_buffer[DISP_LINE_BYTES+2] = 0; // send two final bytes to flush last time
+      s_dma_line_buffer[DISP_LINE_BYTES+3] = 0;
+    }
+    prv_display_write_async(s_dma_line_buffer, DISP_LINE_BYTES+lastLine?4:2);
     break;
   }
   default:
