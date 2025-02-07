@@ -4,12 +4,54 @@ This repository contains the source code of PebbleOS.
 
 **This has been hacked around to add a 'banglejs2' board type**
 
+**USAGE:**
+
+* Wire an nRF52DK to your Bangle.js using this guide: https://www.espruino.com/Bangle.js2+Technical#swd
+* Then follow the steps below under `Getting Started` and `nrfjproj` should write to your Bangle
+
+Note that PebbleOS and Bangle.js firmware can not coexist, so using this will stop you using your Bangle.js unless you reflash it.
+
 **Current state is:**
 
 * `./waf configure --board banglejs2 --nojs --nohash` works
 * `./waf build` builds a binary
 * We have what appear to be the correct GPIOs for some of the Bangle.js functionality
 * `jdi_lpm013m126c.h` driver is implemented (however unsure if it works or not - even the commented out debugging code has no effect)
+* Debug is on pin UATX at 230400 or possible 1000000 baud (Pebble defaults) - I can't read it here (maybe my USB-TTL dongle?), but by applying this patch it becomes readable-ish at 115200 baud:
+
+```
+diff --git a/src/fw/console/dbgserial.c b/src/fw/console/dbgserial.c
+index 3e5d325..867e031 100644
+--- a/src/fw/console/dbgserial.c
++++ b/src/fw/console/dbgserial.c
+@@ -22,11 +22,7 @@
+ #include <stdio.h>
+ 
+ 
+-#if PULSE_EVERYWHERE
+-#define DEFAULT_SERIAL_BAUD_RATE 1000000
+-#else
+-#define DEFAULT_SERIAL_BAUD_RATE 230400
+-#endif
++#define DEFAULT_SERIAL_BAUD_RATE 115200
+ 
+ 
+ void dbgserial_init(void) {
+diff --git a/src/fw/drivers/nrf5/uart.c b/src/fw/drivers/nrf5/uart.c
+index e63626a..53553ff 100644
+--- a/src/fw/drivers/nrf5/uart.c
++++ b/src/fw/drivers/nrf5/uart.c
+@@ -36,7 +36,7 @@ void uart_init(UARTDevice *dev) {
+     .p_context = (void *)dev,
+     .tx_cache = { .p_buffer = (uint8_t *) dev->state->tx_cache_buffer, .length = sizeof(dev->state->tx_cache_buffer) },
+     .rx_cache = { .p_buffer = (uint8_t *) dev->state->rx_cache_buffer, .length = sizeof(dev->state->rx_cache_buffer) },
+-    .baudrate = NRF_UARTE_BAUDRATE_1000000,
++    .baudrate = NRF_UARTE_BAUDRATE_115200,
+     .config = {
+       .hwfc = NRF_UARTE_HWFC_DISABLED,
+       .parity = NRF_UARTE_PARITY_EXCLUDED,
+
+```
 
 Appears to crash in:
 
@@ -28,14 +70,26 @@ Appears to crash in:
 #11 0x0008780a in main_task (parameter=<optimized out>) at ../src/fw/main.c:523
 ```
 
-Which appears to be further than the `asterix_vla_dvb1` gets on the Bangle.js board (that crashes because the flash wasn't found) but I still don't understand why.
+But outputs this amoung the jibberish:
+
+```
+UUP!              +main.c*M __TINTIN__ @UUP!
+main.c*M vkUUP!
+main.c*M 
+(c) 2013 Pebble? UUP!
+main.c*M    ULOGGING DISABLED
+LOGGING DISABLEDUP!1
+new_timer.cDM~NT: Initializing !z}UUP!
+qspi.cEMt/Flash isn't expected GD25Q64 (whoami: 0x0) |qU
+```
+
+So it's having trouble getting the flash ID.
 
 **TODO**
 
-* Find out why we have the crash above 
+* Find out why we have the crash - first step investigate why the flash chip isn't responding 
 * Bangle.js has all 4 button IO pins assigned to the same number (might this cause issues?) Ideally we implement our own touchscreen handler and fake buttons using the touchscreen
 * Accelerometer/Magnetometer/etc not implemented
-
 
 
 

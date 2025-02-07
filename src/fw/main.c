@@ -174,6 +174,26 @@ static void dump_gpio_configuration_state(void) {
 int main(void) {
   gpio_init_all();
 
+#if BOARD_BANGLEJS2
+  // Ensure that GPIO output voltage is 3.3v (not 1.8v) if powered via regulator
+  // Configure UICR_REGOUT0 register only if it is set to default value.
+  if ((NRF_UICR->REGOUT0 & UICR_REGOUT0_VOUT_Msk) ==
+      (UICR_REGOUT0_VOUT_DEFAULT << UICR_REGOUT0_VOUT_Pos))
+  {
+      NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Wen;
+      while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+
+      NRF_UICR->REGOUT0 = (NRF_UICR->REGOUT0 & ~((uint32_t)UICR_REGOUT0_VOUT_Msk)) |
+                          (UICR_REGOUT0_VOUT_3V3 << UICR_REGOUT0_VOUT_Pos);
+
+      NRF_NVMC->CONFIG = NVMC_CONFIG_WEN_Ren;
+      while (NRF_NVMC->READY == NVMC_READY_READY_Busy){}
+
+      // System reset is needed to update UICR registers.
+      NVIC_SystemReset();
+  }
+#endif
+
 #if defined(MICRO_FAMILY_STM32F4) && !defined(LOW_POWER_DEBUG)
   // If we're on a snowy board using the stm32f4, we experience random hardfaults after leaving a
   // wfi instruction if we have mcu debugging enabled. For now, just turn off mcu debugging
