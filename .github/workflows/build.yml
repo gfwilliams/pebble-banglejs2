@@ -39,7 +39,7 @@ jobs:
 
       - name: Build firmware
         run: |
-          ./waf configure --board asterix_vla_dvb1 --nojs --nohash
+          ./waf configure --board banglejs2 --nojs --nohash
           ./waf build
           ./waf build_prf
 

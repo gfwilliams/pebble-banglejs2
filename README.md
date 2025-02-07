@@ -59,10 +59,10 @@ may work right now.
 First, configure the project like this:
 
 ```shell
-./waf configure --board asterix_vla_dvb1 --nojs --nohash
+./waf configure --board banglejs2 --nojs --nohash
 ```
 
-At this moment, only `asterix_vla_dvb1` board target may compile and boot.
+At this moment, only `asterix_vla_dvb1` and `banglejs2` board target may compile and boot.
 
 Then build:
 

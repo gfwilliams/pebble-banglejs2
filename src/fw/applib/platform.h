@@ -33,7 +33,7 @@ typedef enum PlatformType {
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeBasalt
   #elif PLATFORM_SPALDING
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeChalk
-  #elif PLATFORM_SILK || PLATFORM_ASTERIX
+  #elif PLATFORM_SILK || PLATFORM_ASTERIX || PLATFORM_BANGLEJS2
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeDiorite
   #elif PLATFORM_ROBERT || PLATFORM_CALCULUS
     #define PBL_PLATFORM_TYPE_CURRENT PlatformTypeEmery

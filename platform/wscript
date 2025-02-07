@@ -44,6 +44,10 @@ def is_asterix(ctx):
     return ctx.get_board().startswith('asterix')
 
 @conf
+def is_banglejs2(ctx):
+    return ctx.get_board().startswith('banglejs2')
+
+@conf
 def get_platform_name(ctx):
     if is_tintin(ctx):
         return "tintin"
@@ -59,6 +63,8 @@ def get_platform_name(ctx):
         return "robert"
     elif is_asterix(ctx):
         return "asterix"
+    elif is_banglejs2(ctx):
+        return "banglejs2"
     else:
         return "unknown"
 
@@ -105,6 +111,8 @@ def get_qemu_cpu(ctx):
         return 'cortex-m4'
     elif is_asterix(ctx):
         return 'cortex-m4'
+    elif is_banglejs2(ctx):
+        return 'cortex-m4'
     else:
         return 'unknown'
 
@@ -143,6 +151,8 @@ def has_touch(ctx):
         return False
     elif is_asterix(ctx):
         return False
+    elif is_banglejs2(ctx):
+        return False  # FIXME - we do have touch! Might just use it to fake buttons though
     else:
         return None
 
@@ -189,6 +199,9 @@ def add_platform_defines(ctx, env):
     elif ctx.is_asterix():
         bit_depth = 1
         platform = 'SILK' # For now, Asterix-likes are actually Silk-like.
+    elif ctx.is_banglejs2():
+        bit_depth = 1 # FIXME should be 3 bit
+        platform = 'SILK' # For now, Bangle.js 2 is actually Silk-like.
     else:
         ctx.fatal('No platform specified for {}!'.format(ctx.options.board))
 

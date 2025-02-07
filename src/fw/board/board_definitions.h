@@ -61,6 +61,8 @@
 #include "boards/board_robert.h" // prototypes for Robert EVT
 #elif BOARD_ASTERIX_VLA_DVB1
 #include "boards/board_asterix.h"
+#elif BOARD_BANGLEJS2
+#include "boards/board_banglejs2.h"
 #else
 #error "Unknown board definition"
 #endif

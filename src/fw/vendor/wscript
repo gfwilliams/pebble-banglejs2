@@ -9,7 +9,7 @@ def configure(conf):
         conf.env.append_unique('DEFINES', 'NRF52840_XXAA')
         conf.env.append_unique('DEFINES', 'S140')
         conf.env.append_unique('DEFINES', 'SOFTDEVICE_PRESENT')
-    if conf.is_asterix():
+    if conf.is_asterix() or conf.is_banglejs2():
         conf.env.append_unique('DEFINES', 'NRF_CONFIG_NFCT_PINS_AS_GPIOS')
     conf.recurse('FreeRTOS')
     if conf.capability('HAS_JAVASCRIPT'):
@@ -50,7 +50,7 @@ def build(bld):
     	# nRF52 uses nrf5-sdk
         micro_sources = bld.path.ant_glob('nrf5-sdk/modules/nrfx/**/*.c', excl = ['**/system_nrf*.c', '**/startup_nrf_common.c', '**/nrfx_twi_twim.c', '**/nrfx_uarte.c'])
         micro_sources.append('nrf5-sdk-uarte-backport/nrfx_uarte.c')
-        
+
         nrf52_bluetooth_sources = [
             'components/libraries/util/app_util_platform.c',
             'components/libraries/experimental_section_vars/nrf_section_iter.c',
@@ -69,7 +69,7 @@ def build(bld):
             'components/libraries/util/app_util_platform.c',
         ]
         micro_sources += [ "nrf5-sdk/" + f for f in nrf52_bluetooth_sources ]
- 
+
         micro_includes = [
             'CMSIS/CMSIS/Core/Include',
             'nrf5-sdk-uarte-backport/',
@@ -98,6 +98,9 @@ def build(bld):
         if bld.is_asterix():
             # is there a better way to do this?
             micro_includes += ['../board/boards/board_asterix']
+        elif bld.is_banglejs2():
+            # is there a better way to do this?
+            micro_includes += ['../board/boards/board_banglejs2']
         else:
             bld.fatal("no board for nRF5 includes")
     else:

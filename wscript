@@ -81,7 +81,8 @@ def options(opt):
                              'robert_bb2',
                              'robert_evt',
                              'robert_es',
-                             'asterix_vla_dvb1',],
+                             'asterix_vla_dvb1',
+                             'banglejs2',],
                    help='Which board we are targeting '
                         'bb2, snowy_dvt, spalding, silk...')
     opt.add_option('--jtag', action='store', default=None, dest='jtag',  # default is bb2 (below)
@@ -421,7 +422,7 @@ def configure(conf):
     elif conf.options.board in ('snowy_bb2', 'spalding_bb2'):
         conf.env.JTAG = 'jtag_ftdi'
     elif conf.options.board in ('cutts_bb', 'robert_bb', 'robert_bb2', 'robert_evt',
-                                'silk_evt', 'silk_bb', 'silk_bb2', 'silk', 'asterix_vla_dvb1'):
+                                'silk_evt', 'silk_bb', 'silk_bb2', 'silk', 'asterix_vla_dvb1', 'banglejs2'):
         conf.env.JTAG = 'swd_ftdi'
     else:
         # default to bb2
@@ -443,7 +444,7 @@ def configure(conf):
     elif conf.is_snowy_compatible():
         conf.env.PLATFORM_NAME = 'basalt'
         conf.env.MIN_SDK_VERSION = 2
-    elif conf.is_silk() or conf.is_asterix():
+    elif conf.is_silk() or conf.is_asterix() or conf.is_banglejs2():
         conf.env.PLATFORM_NAME = 'diorite'
         conf.env.MIN_SDK_VERSION = 2
     elif conf.is_cutts() or conf.is_robert():
@@ -461,7 +462,7 @@ def configure(conf):
         conf.env.MICRO_FAMILY = 'STM32F4'
     elif conf.is_cutts() or conf.is_robert():
         conf.env.MICRO_FAMILY = 'STM32F7'
-    elif conf.is_asterix():
+    elif conf.is_asterix() or conf.is_banglejs2():
         conf.env.MICRO_FAMILY = 'NRF52840'
     else:
         conf.fatal('No micro family specified for {}!'.format(conf.options.board))
@@ -505,7 +506,7 @@ def configure(conf):
     elif conf.is_tintin() or conf.is_snowy() or conf.is_spalding():
         conf.env.bt_controller = 'cc2564x'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_CC2564X'])
-    elif conf.is_asterix():
+    elif conf.is_asterix() or conf.is_banglejs2():
         conf.env.bt_controller = 'nrf52'
         conf.env.append_value('DEFINES', ['BT_CONTROLLER_NRF52'])
     elif bt_board in ('silk_bb2', 'silk', 'robert_bb2', 'robert_evt'):
