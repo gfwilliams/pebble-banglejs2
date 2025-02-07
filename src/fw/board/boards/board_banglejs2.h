@@ -12,17 +12,17 @@ static const BoardConfig BOARD_CONFIG = {
   .photo_en = { },
   .als_always_on = true,
 
-  // new sharp display requires 30/60Hz so we feed it directly from PMIC... XXX: some day
-  .lcd_com = { 0 },
+  // JDI LPM013M126 has EXTCOMIN
+  .lcd_com = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 6), true },
 
   .backlight_on_percent = 25,
   .backlight_max_duty_cycle_percent = 67,
 
   .power_5v0_options = OptionNotPresent,
   .power_ctl_5v0 = { 0 },
-  
+
   .dbgserial_int = {
-    .peripheral = NRFX_GPIOTE_INSTANCE(0), 
+    .peripheral = NRFX_GPIOTE_INSTANCE(0),
     .channel = 0,
     .gpio_pin = NRF_GPIO_PIN_MAP(1, 10), // rx
   },
@@ -106,12 +106,12 @@ static const BoardConfigMag BOARD_CONFIG_MAG = {
     .axes_inverts[AXIS_Z] = false,
 #endif
   },
-//  .mag_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 3) },
-//  .mag_int = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 5, .gpio_pin = NRF_GPIO_PIN_MAP(0, 3), },
+//  .mag_int_gpio = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(X, X) }, // Bangle.js2 has no magnetometer interrupt
+//  .mag_int = { .peripheral = NRFX_GPIOTE_INSTANCE(0), .channel = 5, .gpio_pin = NRF_GPIO_PIN_MAP(X, X), }, // Bangle.js2 has no magnetometer interrupt
 };
 
 static const BoardConfigActuator BOARD_CONFIG_VIBE = {
-  .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 19), true }, // LRA_EN
+  .ctl = { NRF5_GPIO_RESOURCE_EXISTS, NRF_GPIO_PIN_MAP(0, 19), true },
   .vsys_scale = 3300,
 };
 
