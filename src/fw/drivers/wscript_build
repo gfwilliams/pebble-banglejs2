@@ -1203,7 +1203,6 @@ if mcu_family == 'NRF52840':
             'nrf5/qspi.c',
             'task_watchdog.c',
             'nrf5/stubs/watchdog.c',
-            'display/sharp_ls013b7dh01/sharp_ls013b7dh01_nrf5.c',
             'nrf5/stubs/accel.c',
             'nrf5/stubs/ambient_light.c',
             'nrf5/stubs/vibe.c',
@@ -1225,8 +1224,12 @@ if mcu_family == 'NRF52840':
             'nrf5/spi.c',
             'nrf5/pwm.c'
         ];
+    # FIXME: huge hack - these should be added to the build above
+    if bld.is_banglejs2():
+      srcs.append('display/jdi_lpm013m126c/jdi_lpm013m126c_nrf5.c')
     if bld.is_asterix():
-      srcs.append('pmic/npm1300.c') # FIXME: huge hack
+      srcs.append('display/sharp_ls013b7dh01/sharp_ls013b7dh01_nrf5.c')
+      srcs.append('pmic/npm1300.c')
     bld.objects(
         name='driver_nrf52',
         source=srcs,
