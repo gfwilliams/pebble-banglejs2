@@ -35,16 +35,18 @@ static const BoardConfigButton BOARD_CONFIG_BUTTON = {
     [BUTTON_ID_BACK] =
         { "Back",   { NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(0, 17) }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_UP] =
-        { "Up",     { NRFX_GPIOTE_INSTANCE(0), 2, NRF_GPIO_PIN_MAP(0, 17) }, NRF_GPIO_PIN_PULLUP },
+        { "Up",     { NRFX_GPIOTE_INSTANCE(0), 0, 0xFFFFFFFF }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_SELECT] =
-        { "Select", { NRFX_GPIOTE_INSTANCE(0), 3, NRF_GPIO_PIN_MAP(0, 17) }, NRF_GPIO_PIN_PULLUP },
+        { "Select", { NRFX_GPIOTE_INSTANCE(0), 0, 0xFFFFFFFF }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_DOWN] =
-        { "Down",   { NRFX_GPIOTE_INSTANCE(0), 4, NRF_GPIO_PIN_MAP(0, 17) }, NRF_GPIO_PIN_PULLUP },
+        { "Down",   { NRFX_GPIOTE_INSTANCE(0), 0, 0xFFFFFFFF }, NRF_GPIO_PIN_PULLUP },
   },
   .button_com = { 0 },
   .active_high = false,
   .timer = NRFX_TIMER_INSTANCE(1),
 };
+
+static const ExtiConfig BOARD_CONFIG_TOUCH_EXTI = { NRFX_GPIOTE_INSTANCE(0), 2, NRF_GPIO_PIN_MAP(1, 4) }; // active low
 
 static const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = { },
@@ -60,7 +62,7 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
   },
 
   .vusb_stat = { .gpio_pin = GPIO_Pin_NULL, },
-  .chg_stat = { },
+  .chg_stat = { .gpio_pin = NRF_GPIO_PIN_MAP(0, 23) },
   .chg_fast = { },
   .chg_en = { },
   .has_vusb_interrupt = false,

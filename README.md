@@ -15,9 +15,10 @@ Note that PebbleOS and Bangle.js firmware can not coexist, so using this will st
 
 * `./waf configure --board banglejs2 --nojs --nohash` works
 * `./waf build` builds a binary
-* We have what appear to be the correct GPIOs for some of the Bangle.js functionality
-* `jdi_lpm013m126c.h` driver is implemented and works
-* Debug is on pin UATX/UARX - but you can't read it direct with a terminal app - you need to use `python tools/pulse_console.py -t /dev/ttyUSB0`
+* We have what appear to be the correct GPIOs for some of the Bangle.js functionality (but not all!)
+* `jdi_lpm013m126c.h` LCD driver is implemented and works
+* Touchscreen swipes can be used for up/down/select/back buttons, and the one physical button is for 'back'
+* Debug is on pin UATX/UARX (only available from inside the watch!) - but you can't read it direct with a terminal app - you need to use `python tools/pulse_console.py -t /dev/ttyUSB0`
 
 ### Flash Contents
 
@@ -40,12 +41,11 @@ You can back QSPI to generate the file with:
 
 ### TODO
 
-* Bangle.js has all 4 button IO pins assigned to the same number (might this cause issues?) Ideally we implement our own touchscreen handler and fake buttons using the touchscreen
 * Accelerometer/Magnetometer/etc not implemented
-* Fake clicks using same method as "click short"
 * battery_get_millivolts (stubs/battery.c)
 * battery_charge_controller_thinks_we_are_charging_impl
 * battery_is_usb_connected_impl
+* Power consumption (touchscreen is on permanently right now, which means 1mA draw!)
 
 ## How PebbleOS works
 

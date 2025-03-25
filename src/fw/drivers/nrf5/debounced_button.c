@@ -103,6 +103,7 @@ void debounced_button_init(void) {
 #endif
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
+    if (BOARD_CONFIG_BUTTON.buttons[i].gpiote.gpio_pin == 0xFFFFFFFF) continue; // ignore fake buttons
     const ExtiConfig config = BOARD_CONFIG_BUTTON.buttons[i].gpiote;
     exti_configure_pin(config, ExtiTrigger_RisingFalling, prv_button_interrupt_handler);
     exti_enable(config);

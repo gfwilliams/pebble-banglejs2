@@ -9,7 +9,7 @@
 
 bool button_is_pressed(ButtonId id) {
   const ButtonConfig* button_config = &BOARD_CONFIG_BUTTON.buttons[id];
-  
+  if (button_config->gpiote.gpio_pin == 0xFFFFFFFF) return false; // not a real button
   uint32_t bit = nrf_gpio_pin_read(button_config->gpiote.gpio_pin);
   return (BOARD_CONFIG_BUTTON.active_high) ? bit : !bit;
 }
@@ -27,6 +27,7 @@ void button_init(void) {
     WTF; // NYI
 
   for (int i = 0; i < NUM_BUTTONS; ++i) {
+    if (BOARD_CONFIG_BUTTON.buttons[i].gpiote.gpio_pin == 0xFFFFFFFF) continue; // ignore fake buttons
     nrf_gpio_cfg_input(BOARD_CONFIG_BUTTON.buttons[i].gpiote.gpio_pin, BOARD_CONFIG_BUTTON.buttons[i].pull);
   }
 }
