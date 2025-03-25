@@ -50,7 +50,7 @@ static QSPIFlashPart QSPI_FLASH_PART = {
   .standby_to_low_power_latency_us = 3,
   .low_power_to_standby_latency_us = 30,
   .supports_fast_read_ddr = false,
-  .qspi_id_value = 0x1740c8,
+  .qspi_id_value = 0x17400b,
   .name = "GD25Q64",
 };
 

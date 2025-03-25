@@ -91,7 +91,7 @@ static void prv_display_start(void) {
   nrfx_spim_config_t config = NRFX_SPIM_DEFAULT_CONFIG;
   config.sck_pin = BOARD_CONFIG_DISPLAY.clk.gpio_pin;
   config.mosi_pin = BOARD_CONFIG_DISPLAY.mosi.gpio_pin;
-  config.frequency = NRF_SPIM_FREQ_2M;
+  config.frequency = NRF_SPIM_FREQ_2M; // FIXME ignores clock set!
 
   /* spim4 has hardware SS but it is tricky to convince NRFX to expose it to
    * us; for now, we use the classic enable chip select mechanism */
@@ -127,7 +127,7 @@ static void prv_display_start(void) {
 
 
   // debug
-  /*gpio_output_init(&BOARD_CONFIG_DISPLAY.clk, GPIO_OType_PP, GPIO_Speed_50MHz);
+  gpio_output_init(&BOARD_CONFIG_DISPLAY.clk, GPIO_OType_PP, GPIO_Speed_50MHz);
   gpio_output_init(&BOARD_CONFIG_DISPLAY.mosi, GPIO_OType_PP, GPIO_Speed_50MHz);
   gpio_output_set(&BOARD_CONFIG_DISPLAY.clk, true);
   gpio_output_set(&BOARD_CONFIG_DISPLAY.mosi, true);
@@ -135,13 +135,13 @@ static void prv_display_start(void) {
   uint8_t buf[24] = { DISP_MODE_WRITE, 0x00 };
   for (int i=0;i<176;i++) {
     buf[1] = i+1;
-    buf[2+(i>>3)] |= 1 << (i&7);
+    buf[2+(i>>3)] |= 128 >> (i&7);
     prv_display_write_sync(buf, sizeof(buf));
   }
   buf[0]=0;
   buf[1]=0;
   prv_display_write_sync(buf, 2);
-  prv_disable_chip_select();*/
+  prv_disable_chip_select();
 
   periph_config_release_lock();
 }
@@ -159,6 +159,7 @@ uint32_t display_baud_rate_change(uint32_t new_frequency_hz) {
 }
 
 void display_init(void) {
+
   if (s_initialized) {
     return;
   }
@@ -263,6 +264,24 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
   s_display_context.get_next_row = nrcb;
   s_display_context.complete = uccb;
 
+  /* // SYNC update
+  prv_enable_chip_select();
+  uint8_t buf[24] = { DISP_MODE_WRITE, 0x00 };
+  for (int i=0;i<176;i++) {
+    DisplayRow r;
+    s_display_context.get_next_row(&r);
+    buf[1] = r.address;
+    for (int p=0;p<22;p++)
+      buf[2+p] = reverse_byte(r.data[p]);
+
+    prv_display_write_sync(buf, sizeof(buf));
+  }
+  buf[0]=0;
+  buf[1]=0;
+  prv_display_write_sync(buf, 2);
+  prv_disable_chip_select();
+  s_display_context.complete();*/
+
   prv_do_dma_update();
 
   // Block while we wait for the update to finish.
@@ -274,11 +293,10 @@ void display_update(NextRowCallback nrcb, UpdateCompleteCallback uccb) {
 
   power_tracking_stop(PowerSystemMcuDma1);
 
-  /* needs to not happen from the ISR, because write_sync depends on the ISR to be called again */
+  // needs to not happen from the ISR, because write_sync depends on the ISR to be called again
   uint8_t buf[] = { 0x00 };
   prv_display_write_sync(buf, sizeof(buf));
   prv_disable_chip_select();
-  prv_display_enter_static();
 
   xSemaphoreGive(s_dma_update_in_progress_semaphore);
   stop_mode_enable(InhibitorDisplay);
@@ -337,14 +355,14 @@ static bool prv_do_dma_update(void) {
 
     s_display_context.state = DISPLAY_STATE_WRITING;
 
-    s_dma_line_buffer[0] = DISP_MODE_WRITE;
 #if DISPLAY_ORIENTATION_ROTATED_180
-      prv_memcpy_reverse_bytes(&s_dma_line_buffer[2], r.data, DISP_LINE_BYTES);
-      s_dma_line_buffer[1] = reverse_byte(r.address + 1);
+    prv_memcpy_reverse_bytes(&s_dma_line_buffer[0], r.data, DISP_LINE_BYTES);
+    s_dma_line_buffer[1] = r.address + 1;
 #else
-      prv_memcpy_backwards((uint32_t*)&s_dma_line_buffer[2], (uint32_t*)r.data, DISP_LINE_WORDS);
-      s_dma_line_buffer[1] = reverse_byte(175 - r.address + 1);
+    prv_memcpy_backwards((uint32_t*)&s_dma_line_buffer[0], (uint32_t*)r.data, DISP_LINE_WORDS);
+    s_dma_line_buffer[1] = 175 - r.address + 1;
 #endif
+    s_dma_line_buffer[0] = DISP_MODE_WRITE;
     prv_display_write_async(s_dma_line_buffer, DISP_LINE_BYTES+2);
 
     break;
@@ -360,20 +378,20 @@ static bool prv_do_dma_update(void) {
       return was_higher_priority_task_woken != pdFALSE;
     }
 
-    s_dma_line_buffer[0] = DISP_MODE_WRITE;
 #if DISPLAY_ORIENTATION_ROTATED_180
-    prv_memcpy_reverse_bytes(&s_dma_line_buffer[2], r.data, DISP_LINE_BYTES);
-    s_dma_line_buffer[1] = reverse_byte(r.address + 1);
+    prv_memcpy_reverse_bytes(&s_dma_line_buffer[0], r.data, DISP_LINE_BYTES);
+    s_dma_line_buffer[1] = r.address + 1;
 #else
-    prv_memcpy_backwards((uint32_t*)&s_dma_line_buffer[2], (uint32_t*)r.data, DISP_LINE_WORDS);
-    s_dma_line_buffer[1] = reverse_byte(175 - r.address + 1);
+    prv_memcpy_backwards((uint32_t*)&s_dma_line_buffer[0], (uint32_t*)r.data, DISP_LINE_WORDS);
+    s_dma_line_buffer[1] = 175 - r.address + 1;
 #endif
+    s_dma_line_buffer[0] = DISP_MODE_WRITE;
     bool lastLine = r.address==(DISP_ROWS-1);
     if (lastLine) {
       s_dma_line_buffer[DISP_LINE_BYTES+2] = 0; // send two final bytes to flush last time
       s_dma_line_buffer[DISP_LINE_BYTES+3] = 0;
     }
-    prv_display_write_async(s_dma_line_buffer, DISP_LINE_BYTES+lastLine?4:2);
+    prv_display_write_async(s_dma_line_buffer, DISP_LINE_BYTES+(lastLine?4:2));
     break;
   }
   default:

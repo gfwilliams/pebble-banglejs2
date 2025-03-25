@@ -39,7 +39,7 @@
 void system_resource_init(void) {
   if (!resource_init_app(SYSTEM_APP, &SYSTEM_RESOURCE_VERSION)) {
     // System resources are missing!
-#if defined(IS_BIGBOARD)
+#if defined(IS_BIGBOARD) || BOARD_BANGLEJS2
     pbl_log(LOG_LEVEL_ERROR, __FILE_NAME__, __LINE__,
         "System resources are missing or corrupt, time to sad watch");
     launcher_panic(ERROR_BAD_RESOURCES);
