@@ -175,7 +175,7 @@ elif bld.is_robert():
         ],
     )
 
-elif bld.is_asterix():
+elif bld.is_asterix() or bld.is_banglejs2():
     bld(
         name='drivers',
         use=[
@@ -694,6 +694,32 @@ elif bld.is_silk():
             'root_includes',
         ],
     )
+elif bld.is_asterix():
+    bld.objects(
+        name='driver_imu',
+        source=[
+            'imu/imu_silk.c',
+        ],
+        use=[
+            'driver_bma255',
+            'driver_mag_null',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
+elif bld.is_banglejs2():
+    bld.objects(
+        name='driver_imu',
+        source=[
+            'imu/imu_silk.c',
+        ],
+        use=[
+            'driver_bma255', # FIXME
+            'driver_mag_null',
+            'fw_includes',
+            'root_includes',
+        ],
+    )
 
 if bld.env.BOARD == "v2_0":
     bld.objects(
@@ -1164,9 +1190,7 @@ if mcu_family in ('STM32F2', 'STM32F4', 'STM32F7'):
 
 if mcu_family == 'NRF52840':
     # XXX: factor this into... drivers
-    bld.objects(
-        name='driver_nrf52',
-        source=[
+    srcs = [
             'nrf5/stubs/rtc.c',
             'nrf5/stubs/rng.c',
             'flash/flash_api.c',
@@ -1199,9 +1223,13 @@ if mcu_family == 'NRF52840':
             'nrf5/gpio.c',
             'nrf5/i2c_hal.c',
             'nrf5/spi.c',
-            'nrf5/pwm.c',
-            'pmic/npm1300.c',
-        ],
+            'nrf5/pwm.c'
+        ];
+    if bld.is_asterix():
+      srcs.append('pmic/npm1300.c') # FIXME: huge hack
+    bld.objects(
+        name='driver_nrf52',
+        source=srcs,
         use=[
             'driver_clocksource',
             'driver_gpio',

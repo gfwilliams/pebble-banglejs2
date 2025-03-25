@@ -73,6 +73,7 @@ At this moment, only the following boards are supported/tested:
 - asterix_evt1
 - snowy_bb2 (no Bluetooth)
 - silk_bb2 (no Bluetooth)
+- banglejs2
 
 Then build:
 
