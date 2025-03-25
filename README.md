@@ -2,7 +2,7 @@
 
 This repository contains the source code of PebbleOS.
 
-**This has been hacked around to add a 'banglejs2' board type**
+**This has been hacked around to add a 'banglejs2' board type**. Original repo is at https://github.com/pebble-dev/pebble-firmware
 
 **USAGE:**
 
@@ -27,8 +27,8 @@ below if you have UATX/UARX connected (but to do that your watch has to be open)
 to flash some data that I have previously uploaded with `pulse_flash_imaging` and downloaded:
 
 ```
-nrfjprog --log --qspiini nrfjprog.qspi.ini --qspieraseall
-nrfjprog --log --qspiini nrfjprog.qspi.ini --program banglejs_qspi.hex
+nrfjprog --log --qspiini banglejs_nrfjprog.qspi.ini --qspieraseall
+nrfjprog --log --qspiini banglejs_nrfjprog.qspi.ini --program banglejs_qspi.hex
 nrfjprog --reset
 ```
 
@@ -36,7 +36,7 @@ You can back QSPI to generate the file with:
 
 ```
 # ./waf image_resources --tty /dev/ttyUSB0 (as below)
-# nrfjprog --qspiini nrfjprog.qspi.ini --readqspi banglejs_qspi.hex
+# nrfjprog --qspiini banglejs_nrfjprog.qspi.ini --readqspi banglejs_qspi.hex
 ```
 
 ### TODO
