@@ -35,11 +35,11 @@ static const BoardConfigButton BOARD_CONFIG_BUTTON = {
     [BUTTON_ID_BACK] =
         { "Back",   { NRFX_GPIOTE_INSTANCE(0), 1, NRF_GPIO_PIN_MAP(0, 17) }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_UP] =
-        { "Up",     { NRFX_GPIOTE_INSTANCE(0), 0, 0xFFFFFFFF }, NRF_GPIO_PIN_PULLUP },
+        { "Up",     { NRFX_GPIOTE_INSTANCE(0), 0, GPIO_Pin_NULL }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_SELECT] =
-        { "Select", { NRFX_GPIOTE_INSTANCE(0), 0, 0xFFFFFFFF }, NRF_GPIO_PIN_PULLUP },
+        { "Select", { NRFX_GPIOTE_INSTANCE(0), 0, GPIO_Pin_NULL }, NRF_GPIO_PIN_PULLUP },
     [BUTTON_ID_DOWN] =
-        { "Down",   { NRFX_GPIOTE_INSTANCE(0), 0, 0xFFFFFFFF }, NRF_GPIO_PIN_PULLUP },
+        { "Down",   { NRFX_GPIOTE_INSTANCE(0), 0, GPIO_Pin_NULL }, NRF_GPIO_PIN_PULLUP },
   },
   .button_com = { 0 },
   .active_high = false,
