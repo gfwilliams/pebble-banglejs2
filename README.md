@@ -43,8 +43,6 @@ You can back QSPI to generate the file with:
 
 * Accelerometer/Magnetometer/etc not implemented
 * battery_get_millivolts (stubs/battery.c)
-* battery_charge_controller_thinks_we_are_charging_impl
-* battery_is_usb_connected_impl
 * Power consumption (touchscreen is on permanently right now, which means 1mA draw!)
 
 ## How PebbleOS works

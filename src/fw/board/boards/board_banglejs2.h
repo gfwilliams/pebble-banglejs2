@@ -50,7 +50,7 @@ static const ExtiConfig BOARD_CONFIG_TOUCH_EXTI = { NRFX_GPIOTE_INSTANCE(0), 2, 
 
 static const BoardConfigPower BOARD_CONFIG_POWER = {
   .pmic_int = { },
-  .pmic_int_gpio = { .gpio_pin = GPIO_Pin_NULL, }, /* TODO */
+  .pmic_int_gpio = { .gpio_pin = GPIO_Pin_NULL, },
 
   .battery_vmon_scale = { /* TODO */
     // Battery voltage is scaled down by a pair of resistors:
@@ -61,23 +61,18 @@ static const BoardConfigPower BOARD_CONFIG_POWER = {
     .denominator = 301,
   },
 
-  .vusb_stat = { .gpio_pin = GPIO_Pin_NULL, },
-  .chg_stat = { .gpio_pin = NRF_GPIO_PIN_MAP(0, 23) },
+  .vusb_stat = { .gpio_pin = NRF_GPIO_PIN_MAP(0, 23), },
+  .vusb_gpiote = { NRFX_GPIOTE_INSTANCE(0), 3, NRF_GPIO_PIN_MAP(0, 23) },
+  .chg_stat = { .gpio_pin = NRF_GPIO_PIN_MAP(0, 25) },
   .chg_fast = { },
   .chg_en = { },
-  .has_vusb_interrupt = false,
+  .has_vusb_interrupt = true,
 
   .wake_on_usb_power = false,
 
   .charging_status_led_voltage_compensation = 0,
 
-#if defined(IS_BIGBOARD) && !defined(BATTERY_DEBUG)
-  // We don't use the same batteries on all bigboards, so set a safe cutoff voltage of 4.2V.
-  // Please do not change this!
   .charging_cutoff_voltage = 4200,
-#else
-  .charging_cutoff_voltage = 4300,
-#endif
 
   .low_power_threshold = 5,
 
