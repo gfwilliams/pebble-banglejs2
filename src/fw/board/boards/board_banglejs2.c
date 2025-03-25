@@ -23,14 +23,12 @@
 
 // QSPI
 #include <nrfx_qspi.h>
-#include <nrfx_power_clock.h>
+#include <nrfx_gpiote.h>
+#include <nrfx_spim.h>
+#include <nrfx_twim.h>
 #include <hal/nrf_gpio.h>
+#include <hal/nrf_clock.h>
 
-#undef STRINGIFY
-#undef MIN
-#undef MAX
-#include <nrf_sdh.h>
-#include <nrf_sdh_ble.h>
 
 /* SPI FLash */
 static QSPIPortState s_qspi_port_state;
@@ -70,7 +68,7 @@ static UARTDevice DBG_UART_DEVICE = {
   .counter = NRFX_TIMER_INSTANCE(2),
 };
 UARTDevice * const DBG_UART = &DBG_UART_DEVICE;
-IRQ_MAP_NRFX(UARTE0_UART0, nrfx_uarte_0_irq_handler);
+IRQ_MAP_NRFX(UART0_UARTE0, nrfx_uarte_0_irq_handler);
 /* PERIPHERAL ID 8 */
 
 /* buttons */
@@ -78,12 +76,12 @@ IRQ_MAP_NRFX(TIMER1, nrfx_timer_1_irq_handler);
 IRQ_MAP_NRFX(TIMER2, nrfx_timer_2_irq_handler);
 
 /* display */
-
 IRQ_MAP_NRFX(SPIM3, nrfx_spim_3_irq_handler);
+
 /* PERIPHERAL ID 10 */
 
 /* EXTI */
-IRQ_MAP_NRFX(GPIOTE, nrfx_gpiote_irq_handler);
+IRQ_MAP_NRFX(GPIOTE, nrfx_gpiote_0_irq_handler);
 
 /* Touch */
 /*static I2CBusState I2C_TOUCH_IIC1_BUS_STATE = {};
@@ -137,7 +135,7 @@ static const I2CBus I2C_IIC2_BUS = {
   },
   .name = "I2C_IIC2"
 };
-IRQ_MAP_NRFX(SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0, nrfx_twim_0_irq_handler);
+IRQ_MAP_NRFX(SPI0_SPIM0_SPIS0_TWI0_TWIM0_TWIS0, nrfx_twim_0_irq_handler);
 
 /* PERIPHERAL ID 11 */
 
@@ -148,17 +146,19 @@ IRQ_MAP_NRFX(SPIM0_SPIS0_TWIM0_TWIS0_SPI0_TWI0, nrfx_twim_0_irq_handler);
 PwmState BACKLIGHT_PWM_STATE;
 IRQ_MAP_NRFX(PWM0, nrfx_pwm_0_irq_handler);
 
-IRQ_MAP_NRFX(POWER_CLOCK, nrfx_power_clock_irq_handler);
-
 void board_early_init(void) {
   PBL_LOG(LOG_LEVEL_ALWAYS, "bangle early init");
 
-  /* do this now to turn on lfclk */
-  ret_code_t rv;
-  rv = nrf_sdh_enable_request();
-  PBL_ASSERTN(rv == NRF_SUCCESS);
-
-  PBL_LOG(LOG_LEVEL_ALWAYS, "SDH enabled");
+  nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_XTAL);
+  nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
+  nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
+  /* TODO: Add timeout, report failure if LFCLK does not start. For now,
+   * WDT should trigger a reboot. Calibrated RC may be used as a fallback,
+   * provided we can adjust BLE SCA settings at runtime.
+   */
+  while (!nrf_clock_event_check(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED)) {
+  }
+  nrf_clock_event_clear(NRF_CLOCK, NRF_CLOCK_EVENT_LFCLKSTARTED);
 }
 
 // ============================================================= super hacky software i2c for touch

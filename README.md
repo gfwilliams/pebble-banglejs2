@@ -35,7 +35,7 @@ nrfjprog --reset
 You can back QSPI to generate the file with:
 
 ```
-# tools/pulse_flash_imaging.py ... (as below)
+# ./waf image_resources --tty /dev/ttyUSB0 (as below)
 # nrfjprog --qspiini nrfjprog.qspi.ini --readqspi banglejs_qspi.hex
 ```
 

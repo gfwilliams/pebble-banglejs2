@@ -88,9 +88,8 @@ static void prv_display_start(void) {
 
   gpio_output_init(&BOARD_CONFIG_DISPLAY.cs, GPIO_OType_PP, GPIO_Speed_50MHz);
 
-  nrfx_spim_config_t config = NRFX_SPIM_DEFAULT_CONFIG;
-  config.sck_pin = BOARD_CONFIG_DISPLAY.clk.gpio_pin;
-  config.mosi_pin = BOARD_CONFIG_DISPLAY.mosi.gpio_pin;
+  nrfx_spim_config_t config = NRFX_SPIM_DEFAULT_CONFIG(
+    BOARD_CONFIG_DISPLAY.clk.gpio_pin, BOARD_CONFIG_DISPLAY.mosi.gpio_pin, NRF_SPIM_PIN_NOT_CONNECTED, NRF_SPIM_PIN_NOT_CONNECTED);
   config.frequency = NRF_SPIM_FREQ_2M; // FIXME ignores clock set!
 
   /* spim4 has hardware SS but it is tricky to convince NRFX to expose it to

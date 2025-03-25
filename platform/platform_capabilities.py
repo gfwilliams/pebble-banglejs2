@@ -284,6 +284,7 @@ board_capability_dicts = [
             'HAS_APP_GLANCES',
             'HAS_CORE_NAVIGATION4',
             'HAS_HEALTH_TRACKING',
+            #'HAS_HARDWARE_PANIC_SCREEN', could add display_show_panic_screen function?
             'HAS_JAVASCRIPT',
             'HAS_LAUNCHER4',
             # 'HAS_MAPPABLE_FLASH' -- TODO: PBL-33860 verify memory-mappable flash works on silk before activating
