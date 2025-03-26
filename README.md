@@ -4,46 +4,61 @@ This repository contains the source code of PebbleOS.
 
 **This has been hacked around to add a 'banglejs2' board type**. Original repo is at https://github.com/pebble-dev/pebble-firmware
 
-**USAGE:**
+### Installing on a Bangle.js
 
-* Wire an nRF52DK to your Bangle.js using this guide: https://www.espruino.com/Bangle.js2+Technical#swd
-* Then follow the steps below under `Getting Started` and `nrfjproj` should write to your Bangle
-
-Note that PebbleOS and Bangle.js firmware can not coexist, so using this will stop you using your Bangle.js unless you reflash it.
-
-**Current state is:**
-
-* `./waf configure --board banglejs2 --nojs --nohash` works
-* `./waf build` builds a binary
-* We have what appear to be the correct GPIOs for some of the Bangle.js functionality (but not all!)
-* `jdi_lpm013m126c.h` LCD driver is implemented and works
-* Touchscreen swipes can be used for up/down/select/back buttons, and the one physical button is for 'back'
-* Debug is on pin UATX/UARX (only available from inside the watch!) - but you can't read it direct with a terminal app - you need to use `python tools/pulse_console.py -t /dev/ttyUSB0`
-
-### Flash Contents
-
-After flashing the watch will display 'sad face' because it has no data on the SPI flash. You can follow the instructions
-below if you have UATX/UARX connected (but to do that your watch has to be open). Instead you can use nrfjprog over SWD (but it's slow!)
-to flash some data that I have previously uploaded with `pulse_flash_imaging` and downloaded:
+* Wire an nRF52DK board to your Bangle.js using this guide: https://www.espruino.com/Bangle.js2+Technical#swd
+* Write the pre-built PebbleOS firmware and SPI flash contents to your Bangle - it'll take a while:
 
 ```
+cd banglejs
+nrfjprog --program banglejs_pebbleos.hex --sectorerase
 nrfjprog --log --qspiini banglejs_nrfjprog.qspi.ini --qspieraseall
-nrfjprog --log --qspiini banglejs_nrfjprog.qspi.ini --program banglejs_qspi.hex
+nrfjprog --log --qspiini banglejs_nrfjprog.qspi.ini --program banglejs_pebbleos_spiflash.hex
 nrfjprog --reset
 ```
 
-You can back QSPI to generate the file with:
+* To restore your Bangle back to running the Bangle.js firmware:
 
 ```
-# ./waf image_resources --tty /dev/ttyUSB0 (as below)
-# nrfjprog --qspiini banglejs_nrfjprog.qspi.ini --readqspi banglejs_qspi.hex
+cd banglejs
+nrfjprog --program espruino_2v25_banglejs2.hex --sectorerase --reset
+# now choose 'Factory Reset' from the recovery menu
 ```
 
-### TODO
+Then follow the steps below under `Getting Started` and `nrfjproj` should write to your Bangle
 
-* Accelerometer/Magnetometer/etc not implemented
-* battery_get_millivolts (stubs/battery.c)
-* Power consumption (touchscreen is on permanently right now, which means 1mA draw!)
+### Current state:
+
+* `./waf configure --board banglejs2` works, `./waf build` builds a binary for Bangle.js
+* `jdi_lpm013m126c.h` LCD driver is implemented and works
+* Touchscreen swipes can be used for up/down/select/back buttons, and the one physical button is for 'back'
+* Debug is on pin UATX/UARX (only available from inside the watch!) - but you can't read it direct with a terminal app - you need to use `python tools/pulse_console.py -t /dev/ttyUSB0`
+* Accelerometer/Magnetometer/HRM/etc not implemented
+* battery_get_millivolts not implemented (stubs/battery.c)
+* Power consumption is pretty bad (touchscreen is on permanently right now, which means 1mA draw!)
+
+
+### Building yourself
+
+Follow the instructions under `Getting Started` and then you can do:
+
+* `./waf configure --board banglejs2`
+* `./waf build`
+* `nrfjprog --program build/src/fw/tintin_fw.elf --sectorerase --reset`
+
+### SPI Flash Contents
+
+After flashing the watch will display 'sad face' because it has no data on the SPI flash. You can follow the instructions
+below if you have UATX/UARX connected (but to do that your watch has to be open). Instead you can use nrfjprog 
+to flash the data over SWD (instructions above under `Installing on a Bangle.js`).
+
+If you want to generate your own SPI flash backup and you have a Bangle with a UART connection you can do it with:
+
+```
+./waf image_resources --tty /dev/ttyUSB0 (as below)
+cd banglejs
+nrfjprog --qspiini banglejs_nrfjprog.qspi.ini --readqspi banglejs_pebbleos_spiflash.hex
+```
 
 ## How PebbleOS works
 
